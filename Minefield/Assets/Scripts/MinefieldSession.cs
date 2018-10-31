@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Minefield
@@ -16,8 +17,7 @@ namespace Minefield
     }
 
     public class MinefieldSession
-    {
-
+    {      
         private int line;
         private int column;
         private int bombs;
@@ -31,50 +31,36 @@ namespace Minefield
             this.line = line;
             this.column = column;
             this.bombs = bombs;
+
             board = new int[line, column];
 
-            CreateField(bombs);
-            
+            CreateField();
+			InsertBombs();
             InsertNumbers();
 
             LogPrinter.LogList(board, line);
         }
 
-        private void CreateField(int bombs)
+        private void CreateField()
         {
-            Random rnd = new System.Random();
-            var currentBombs = 0;
-            for (var i = 0; i < line; i++)
-            {
-                for (var j = 0; j < column; j++)
-                {
-                    if ((rnd.NextDouble() < ((double) line * column) / bombs) && currentBombs < bombs)
-                    {
-                        currentBombs++;
-                        board[i, j] = BOMB_ID;
-                    }
-                    else
-                        board[i, j] = EMPTY_ID;
-                }
-            }
+			for (var i = 0; i < line; i++)
+				for (var j = 0; j < column; j++)
+					board[i, j] = EMPTY_ID;
         }
 
-        private void InsertBombs(int bombs)
+        private void InsertBombs()
         {
-            System.Random rnd = new System.Random();
-
-            var lines = Enumerable.Range(0, line).ToList();
-            var columns = Enumerable.Range(0, column).ToList();
-
+			var possibilities = new List<MineSpot>();
+			for (var i = 0; i < line; i++)
+				for (var j = 0; j < column; j++)
+					possibilities.Add(new MineSpot(i, j));
+			
+            Random rnd = new Random();         
             for (var i = 0; i < bombs; i++)
             {
-                var currentLine = rnd.Next(0, lines.Count - 1);
-                var currentCollunm = rnd.Next(0, columns.Count - 1);
-
-                board[lines[currentLine], columns[currentCollunm]] = BOMB_ID;
-
-                lines.RemoveAt(currentLine);
-                columns.RemoveAt(currentCollunm);
+				var r = rnd.Next(0, possibilities.Count - 1);            
+				board[possibilities[r].x, possibilities[r].y] = BOMB_ID;
+				possibilities.RemoveAt(r);
             }
         }
 
@@ -116,17 +102,6 @@ namespace Minefield
             if (i <= 0 || i >= line || j <= 0 || j >= column) return false;
             bomb = board[i, j] == BOMB_ID;
             return true;
-        }
-
-        private void InsertNumber(int bL, int bC)
-        {
-            if (bL - 1 < line && bL - 1 > 0 && bC < column && bC > 0) board[bL - 1, bC] += 1;
-            if (bL - 1 < line && bL - 1 > 0 && bC - 1 < column && bC - 1 > 0) board[bL - 1, bC - 1] += 1;
-            if (bL < line && bL > 0 && bC - 1 < column && bC - 1 > 0) board[bL, bC - 1] += 1;
-
-            if (bL + 1 < line && bL + 1 > 0 && bC < column && bC > 0) board[bL + 1, bC] += 1;
-            if (bL + 1 < line && bL + 1 > 0 && bC + 1 < column && bC + 1 > 0) board[bL + 1, bC + 1] += 1;
-            if (bL < line && bL > 0 && bC + 1 < column && bC + 1 > 0) board[bL, bC + 1] += 1;
         }
     }
 }
