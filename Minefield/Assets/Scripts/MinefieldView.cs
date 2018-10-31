@@ -7,8 +7,11 @@ public class MinefieldView : MonoBehaviour, IGameView
 
 	public static MinefieldView ME;
 	public GridLayoutGroup grid;
+	public Image smile;
+	[HideInInspector]
+	public bool gameOver;
 
-	private MinefieldTile[,] mBoard;
+	private MinefieldTile[,] mBoard;   
 
 	private void Awake()
 	{
@@ -20,15 +23,30 @@ public class MinefieldView : MonoBehaviour, IGameView
 		grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 		grid.constraintCount = board.GetLength(0);
 
-		mBoard = new MinefieldTile[board.GetLength(0), board.GetLength(1)];
+		if(mBoard == null)
+		    mBoard = new MinefieldTile[board.GetLength(0), board.GetLength(1)];
 		for (var i = 0; i < board.GetLength(0); i++)
 		{
 			for (var j = 0; j < board.GetLength(1); j++)
 			{
-				mBoard[i, j] = Instantiate(GameAssets.ME.tile, transform).GetComponent<MinefieldTile>();
+				if(mBoard[i, j] == null)
+				    mBoard[i, j] = Instantiate(GameAssets.ME.tile, transform).GetComponent<MinefieldTile>();
 				mBoard[i, j].Initiate(i, j, board[i, j]);
 			}
 		}
+	}
+
+    public void ResetGame()
+	{
+		smile.sprite = GameAssets.ME.defaultSmile; 
+		gameOver = false;
+		Startup.ME.StartGame();
+	}
+
+    public void GameOver()
+	{
+		gameOver = true;
+		smile.sprite = GameAssets.ME.deadSmile;
 	}
 
 	public void Propagate(int i, int j)

@@ -10,6 +10,9 @@ public class GameAssets : MonoBehaviour
 	public Sprite flagSprite;
 	public Sprite bombSprite;
 
+	public Sprite defaultSmile;
+	public Sprite deadSmile;
+
 	private void Awake()
 	{
 		ME = this;
