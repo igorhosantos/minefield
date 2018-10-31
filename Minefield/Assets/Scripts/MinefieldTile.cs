@@ -24,12 +24,18 @@ public class MinefieldTile : MonoBehaviour, IPointerClickHandler
 		mI = i;
 		mJ = j;
 
+		done = false;
+		mFlag = false;
+
 		this.value = value;
 		mImage.sprite = GameAssets.ME.defaultSprite;
 	}   
 
 	public void OnPointerClick(PointerEventData eventData)
     {
+		if (MinefieldView.ME.gameOver)
+			return;
+		
 		if (eventData.button == PointerEventData.InputButton.Left)
 			Click();
 		else if (eventData.button == PointerEventData.InputButton.Right)
@@ -46,7 +52,10 @@ public class MinefieldTile : MonoBehaviour, IPointerClickHandler
     public void ChangeSprite()
 	{
 		if (value == -1)
+		{
 			mImage.sprite = GameAssets.ME.bombSprite;
+			MinefieldView.ME.GameOver();
+		}
 		else
 			mImage.sprite = GameAssets.ME.numbersSprite[value];
 
