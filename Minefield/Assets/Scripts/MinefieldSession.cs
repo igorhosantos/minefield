@@ -1,75 +1,111 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class MinefieldSession : MonoBehaviour
+namespace Minefield
 {
-    
-    private int line;
-    private int collunm;
-    private int bombs;
-    private int[,] board;
-
-    private const int BOMB_ID = -1;
-    private const int EMPTY_ID = 0;
-
-    public MinefieldSession(int line, int collunm, int bombs)
+    internal class MineSpot
     {
-        this.line = line;
-        this.collunm = collunm;
-        this.bombs = bombs;
-        board = new int[line,collunm];
-        
-        InsertEmpty();
-        InsertBombs(bombs);
-        InsertNumbers();
+        public int x;
+        public int y;
 
-        LogPrinter.LogList(board,line);
-    }
-
-    private void InsertEmpty()
-    {
-        for (int i = 0; i < board.GetLength(0); i++)
-            for (int j = 0; j < board.GetLength(1); j++)
-               board[i, j] = EMPTY_ID;
-    }
-
-    private void InsertBombs(int bombs)
-    {
-        int countBombs = 0;
-        System.Random rnd = new System.Random();
-
-        while (countBombs < bombs)
+        public MineSpot(int x, int y)
         {
-            int currentLine = rnd.Next(0, line);
-            int currentCollunm = rnd.Next(0, collunm);
-
-            if (board[currentLine, currentCollunm] != BOMB_ID)
-            {
-                board[currentLine, currentCollunm] = BOMB_ID;
-                countBombs++;
-            }
+            this.x = x;
+            this.y = y;
         }
     }
 
-    private void InsertNumbers()
-    {
-        for (int i = 0; i < board.GetLength(0); i++)
-         for (int j = 0; j < board.GetLength(1); j++)
-             if (board[i, j] == BOMB_ID) InsertNumber(i, j);
-    }
+    public class MinefieldSession
+    {      
+		private const int BOMB_ID = -1;
+        private const int EMPTY_ID = 0;
 
+        private int mLine;
+		private int mColumn;
+		private int mBombs;
+		private int[,] mBoard;
 
-    private void InsertNumber(int bL, int bC)
-    {
-        if (bL-1 < line && bL-1 > 0 && bC < collunm && bC > 0)  board[bL - 1, bC] += 1;
-        if (bL-1 < line && bL-1 > 0 && bC-1 < collunm && bC-1 > 0)  board[bL - 1, bC - 1] += 1;
-        if (bL < line && bL > 0 && bC-1 < collunm && bC-1 > 0)  board[bL, bC - 1] += 1;
+		private IGameView mGameView;
 
+		public MinefieldSession(int line, int column, int bombs, IGameView gameView)
+        {
+			mGameView = gameView;
+            mLine = line;
+            mColumn = column;
+            mBombs = bombs;
 
-        if (bL+1 < line && bL+1 > 0 && bC < collunm && bC > 0) board[bL + 1, bC] += 1;
-        if (bL+1 < line && bL+1 > 0 && bC+1 < collunm && bC+1 > 0) board[bL + 1, bC + 1] += 1;
-        if (bL < line && bL > 0 && bC + 1 < collunm && bC + 1 > 0) board[bL, bC + 1] += 1;
+            mBoard = new int[line, column];
 
+            CreateField();
+			InsertBombs();
+            InsertNumbers();
+
+			mGameView.OnBoardCreation(mBoard);
+
+            LogPrinter.LogList(mBoard, line);
+        }
+
+        private void CreateField()
+        {
+			for (var i = 0; i < mLine; i++)
+				for (var j = 0; j < mColumn; j++)
+					mBoard[i, j] = EMPTY_ID;
+        }
+
+        private void InsertBombs()
+        {
+			var possibilities = new List<MineSpot>();
+			for (var i = 0; i < mLine; i++)
+				for (var j = 0; j < mColumn; j++)
+					possibilities.Add(new MineSpot(i, j));
+			
+            Random rnd = new Random();         
+            for (var i = 0; i < mBombs; i++)
+            {
+				var r = rnd.Next(0, possibilities.Count - 1);            
+				mBoard[possibilities[r].x, possibilities[r].y] = BOMB_ID;
+				possibilities.RemoveAt(r);
+            }
+        }
+
+        private void InsertNumbers()
+        {
+            for (var i = 0; i < mLine; i++)
+            {
+                for (var j = 0; j < mColumn; j++)
+                {
+                    if (mBoard[i, j] == BOMB_ID) continue;
+
+                    int amount = 0;
+                    bool isBomb = false;
+                    if (CheckInBoundsBomb(i - 1, j - 1  , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i,     j - 1  , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i + 1, j - 1  , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i - 1, j      , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i + 1, j      , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i - 1, j + 1  , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i,     j + 1  , out isBomb) && isBomb)
+                        amount++;
+                    if (CheckInBoundsBomb(i + 1, j + 1  , out isBomb) && isBomb)
+                        amount++;
+
+                    mBoard[i, j] = amount;
+                }
+            }
+        }
+
+        private bool CheckInBoundsBomb(int i, int j, out bool bomb)
+        {
+            bomb = false;
+            if (i < 0 || i >= mLine || j < 0 || j >= mColumn) return false;
+            bomb = mBoard[i, j] == BOMB_ID;
+            return true;
+        }
     }
 }
