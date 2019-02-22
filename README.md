@@ -1,3 +1,3 @@
-# nostalgic minefield game
+# Nostalgic minefield game
 
 ![](minefield.gif)
